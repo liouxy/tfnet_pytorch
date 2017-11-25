@@ -47,7 +47,7 @@ class Net(nn.Module):
         )
 
         self.conv_output = nn.Conv2d(in_channels=64, out_channels=4, kernel_size=3, stride=1, padding=1)
-        self.tanh = nn.Tanh()
+        self.relu = nn.Relu()
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -82,5 +82,5 @@ class Net(nn.Module):
         out = torch.add(out, residual)
         out = self.upscale4x(out)
         out = self.conv_output(out)
-        out = self.tanh(out)
+        out = self.relu(out)
         return out

@@ -118,7 +118,7 @@ def train(training_data_loader, optimizer, model, criterion, epoch):
                                                                 loss.data[0]))
 
 def save_checkpoint(model, epoch):
-    model_out_path = "model/model" + "model_epoch_{}.pth".format(epoch)
+    model_out_path = "model/model/" + "model_epoch_{}.pth".format(epoch)
     state = {"epoch": epoch, "model": model}
 
     if not os.path.exists("model/"):
