@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(description='PyTorch Super Res Example')
 parser.add_argument('--batchSize', type=int, default=125, help='training batch size')
 parser.add_argument('--testBatchSize', type=int, default=10, help='testing batch size')
 parser.add_argument('--nEpochs', type=int, default=600, help='number of epochs to train for')
-parser.add_argument('--lr', type=float, default=0.01, help='Learning Rate. Default=0.01')
+parser.add_argument('--lr', type=float, default=0.0001, help='Learning Rate. Default=0.01')
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
 parser.add_argument('--threads', type=int, default=4, help='number of threads for data loader to use')
 parser.add_argument('--seed', type=int, default=123, help='random seed to use. Default=123')
@@ -24,7 +24,7 @@ parser.add_argument('--dataset', type=str, default='/data/pansharpening/GF1/TIF'
 parser.add_argument("--resume", default="", type=str, help="Path to checkpoint (default: none)")
 parser.add_argument("--start-epoch", default=1, type=int, help="Manual epoch number (useful on restarts)")
 parser.add_argument("--pretrained", default="", type=str, help="path to pretrained model (default: none)")
-parser.add_argument("--step", type=int, default=150, help="Sets the learning rate to the initial LR decayed by momentum every n epochs, Default: n=500")
+parser.add_argument("--step", type=int, default=250, help="Sets the learning rate to the initial LR decayed by momentum every n epochs, Default: n=500")
 opt = parser.parse_args()
 
 def main():
@@ -82,12 +82,12 @@ def main():
     print("===> Training")
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):
         train(training_data_loader, optimizer, model, criterion, epoch)
-        if epoch%50==0:
+        if epoch%10==0:
             save_checkpoint(model, epoch)
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10"""
-    lr = opt.lr * (0.1 ** (epoch // opt.step))
+    lr = opt.lr * (0.5 ** (epoch // opt.step))
     return lr
 
 def train(training_data_loader, optimizer, model, criterion, epoch):
