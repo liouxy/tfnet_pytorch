@@ -82,7 +82,8 @@ def main():
     print("===> Training")
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):
         train(training_data_loader, optimizer, model, criterion, epoch)
-        save_checkpoint(model, epoch)
+        if epoch%50==0:
+            save_checkpoint(model, epoch)
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10"""
