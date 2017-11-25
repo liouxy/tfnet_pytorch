@@ -47,7 +47,7 @@ class Net(nn.Module):
         )
 
         self.conv_output = nn.Conv2d(in_channels=64, out_channels=4, kernel_size=3, stride=1, padding=1)
-        self.relu = nn.Relu()
+        self.relu = nn.ReLU()
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
