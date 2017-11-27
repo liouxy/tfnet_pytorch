@@ -138,7 +138,7 @@ class Net(nn.Module):
 
 class TFNet(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
+        super(TFNet, self).__init__()
         self.encoder1_pan=nn.Sequential(
             nn.Conv2d(in_channels=1,
                       out_channels=32,

@@ -22,15 +22,16 @@ class DatasetFromFolder(data.Dataset):
     def __getitem__(self, index):
         input_pan = load_image('%s_pan.tif'%self.image_filenames[index])
         input_lr = load_image('%s_lr.tif'%self.image_filenames[index])
+        input_lr_u = load_image('%s_lr_u.tif'%self.image_filenames[index])
         target = load_image('%s_mul.tif'%self.image_filenames[index])
         if self.input_transform:
             input_pan = self.input_transform(input_pan)
             input_lr = self.input_transform(input_lr)
-
+            input_lr_u = self.input_transform(input_lr_u)
         if self.target_transform:
             target = self.target_transform(target)
 
-        return input_pan, input_lr, target
+        return input_pan, input_lr, input_lr_u, target
 
     def __len__(self):
         return len(self.image_filenames)

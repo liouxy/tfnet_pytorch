@@ -20,7 +20,7 @@ parser.add_argument('--lr', type=float, default=0.0001, help='Learning Rate. Def
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
 parser.add_argument('--threads', type=int, default=4, help='number of threads for data loader to use')
 parser.add_argument('--seed', type=int, default=123, help='random seed to use. Default=123')
-parser.add_argument('--dataset', type=str, default='/data/pansharpening/GF1/TIF')
+parser.add_argument('--dataset', type=str, default='/data/pansharpening/QB/TIF')
 parser.add_argument("--resume", default="", type=str, help="Path to checkpoint (default: none)")
 parser.add_argument("--start-epoch", default=1, type=int, help="Manual epoch number (useful on restarts)")
 parser.add_argument("--pretrained", default="", type=str, help="path to pretrained model (default: none)")
@@ -49,7 +49,7 @@ def main():
     test_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=False)
 
     print("===> Building model")
-    if (opt.net=='tfnet'):
+    if (opt.net=='resnet'):
         model = Net()
     else:
         model = TFNet()
@@ -104,14 +104,16 @@ def train(training_data_loader, optimizer, model, criterion, epoch):
     model.train()
 
     for iteration, batch in enumerate(training_data_loader, 1):
-        input_pan, input_lr, target = Variable(batch[0]), Variable(batch[1]), Variable(batch[2],requires_grad=False)
-
+        input_pan, input_lr, input_lr_u, target = Variable(batch[0]), Variable(batch[1]), Variable(batch[2]),Variable(batch[3], requires_grad=False)
         if opt.cuda:
             input_pan = input_pan.cuda()
             input_lr = input_lr.cuda()
+            input_lr_u = input_lr_u.cuda()
             target = target.cuda()
-
-        output = model(input_pan, input_lr)
+        if(opt.net=="resnet"):
+            output = model(input_pan, input_lr)
+        else:
+            output = model(input_pan, input_lr_u)
         loss = criterion(output, target)
 
         optimizer.zero_grad()
@@ -121,7 +123,6 @@ def train(training_data_loader, optimizer, model, criterion, epoch):
         if iteration%10 == 0:
             print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader),
                                                                 loss.data[0]))
-
 def save_checkpoint(model, epoch):
     model_out_path = "model/model/{}/model_epoch_{}.pth".format(opt.net,epoch)
     state = {"epoch": epoch, "model": model}
