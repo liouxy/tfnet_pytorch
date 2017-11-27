@@ -6,7 +6,7 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from model import Net
+from model import Net, TFNet
 from data import get_training_set, get_test_set
 import random
 import os
@@ -25,6 +25,7 @@ parser.add_argument("--resume", default="", type=str, help="Path to checkpoint (
 parser.add_argument("--start-epoch", default=1, type=int, help="Manual epoch number (useful on restarts)")
 parser.add_argument("--pretrained", default="", type=str, help="path to pretrained model (default: none)")
 parser.add_argument("--step", type=int, default=250, help="Sets the learning rate to the initial LR decayed by momentum every n epochs, Default: n=500")
+parser.add_argument("--net", type=str, choices={'resnet','tfnet'})
 opt = parser.parse_args()
 
 def main():
@@ -48,7 +49,10 @@ def main():
     test_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=False)
 
     print("===> Building model")
-    model = Net()
+    if (opt.net=='tfnet'):
+        model = Net()
+    else:
+        model = TFNet()
     criterion = nn.L1Loss()
 
     print("===> Setting GPU")
@@ -119,11 +123,11 @@ def train(training_data_loader, optimizer, model, criterion, epoch):
                                                                 loss.data[0]))
 
 def save_checkpoint(model, epoch):
-    model_out_path = "model/model/" + "model_epoch_{}.pth".format(epoch)
+    model_out_path = "model/model/{}/model_epoch_{}.pth".format(opt.net,epoch)
     state = {"epoch": epoch, "model": model}
 
-    if not os.path.exists("model/"):
-        os.makedirs("model/")
+    if not os.path.exists("model/model/{}".format(opt.net)):
+        os.makedirs("model/model/{}".format(opt.net))
 
     torch.save(state, model_out_path)
 
