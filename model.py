@@ -221,21 +221,21 @@ class TFNet(nn.Module):
             nn.PixelShuffle(2),
             nn.PReLU())
         self.restore2=nn.Sequential(
-            nn.Conv2d(in_channels=128,
-                      out_channels=64,
+            nn.Conv2d(in_channels=256,
+                      out_channels=128,
                       kernel_size=3,
                       stride=1,
                       padding=1),
             nn.PReLU(),
-            nn.Conv2d(in_channels=64,
-                      out_channels=64*4,
+            nn.Conv2d(in_channels=128,
+                      out_channels=128*4,
                       kernel_size=3,
                       stride=1,
                       padding=1),
             nn.PixelShuffle(2),
             nn.PReLU())
         self.restore3=nn.Sequential(
-            nn.Conv2d(in_channels=128,
+            nn.Conv2d(in_channels=192,
                       out_channels=64,
                       kernel_size=3,
                       stride=1,
