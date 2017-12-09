@@ -101,4 +101,4 @@ ENV/
 .mypy_cache/
 
 #model
-find . -type l
+model
