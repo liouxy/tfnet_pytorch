@@ -10,6 +10,7 @@ from model import Net, TFNet
 from data import get_training_set, get_test_set
 import random
 import os
+import time
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Super Res Example')
@@ -26,6 +27,7 @@ parser.add_argument("--start-epoch", default=1, type=int, help="Manual epoch num
 parser.add_argument("--pretrained", default="", type=str, help="path to pretrained model (default: none)")
 parser.add_argument("--step", type=int, default=250, help="Sets the learning rate to the initial LR decayed by momentum every n epochs, Default: n=500")
 parser.add_argument("--net", type=str, choices={'resnet','tfnet'})
+parser.add_argument("--log", type=str, default="log/")
 opt = parser.parse_args()
 
 def main():
@@ -84,17 +86,23 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=opt.lr)
 
     print("===> Training")
+    t = time.strftime("%Y%m%d%H%M")
+    train_log = open(os.path.join(opt.log, "%s_%s_train.log")%(opt.net, t), "w")
+    test_log = open(os.path.join(opt.log, "%s_%s_test.log")%(opt.net, t), "w")
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):
-        train(training_data_loader, optimizer, model, criterion, epoch)
+        train(training_data_loader, optimizer, model, criterion, epoch, train_log)
         if epoch%10==0:
-            save_checkpoint(model, epoch)
+            test(test_data_loader, model, criterion, epoch, test_log)
+            save_checkpoint(model, epoch, t)
+    train_log.close()
+    test_log.close()
 
 def adjust_learning_rate(optimizer, epoch):
     """Sets the learning rate to the initial LR decayed by 10"""
     lr = opt.lr * (0.5 ** (epoch // opt.step))
     return lr
 
-def train(training_data_loader, optimizer, model, criterion, epoch):
+def train(training_data_loader, optimizer, model, criterion, epoch, train_log):
     lr = adjust_learning_rate(optimizer, epoch - 1)
 
     for param_group in optimizer.param_groups:
@@ -119,12 +127,32 @@ def train(training_data_loader, optimizer, model, criterion, epoch):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
+        train_log.write("{} {:.10f}\n".format(epoch*len(training_data_loader)+iteration, loss.data[0]))
         if iteration%10 == 0:
             print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader),
                                                                 loss.data[0]))
-def save_checkpoint(model, epoch):
-    model_out_path = "model/model/{}/model_epoch_{}.pth".format(opt.net,epoch)
+
+
+def test(test_data_loader, model, criterion, epoch, test_log):
+    avg_l1 = 0
+    for batch in test_data_loader:
+        input_pan, input_lr, input_lr_u, target = Variable(batch[0]), Variable(batch[1]), Variable(batch[2]),Variable(batch[3], requires_grad=False)
+        if opt.cuda:
+            input_pan = input_pan.cuda()
+            input_lr = input_lr.cuda()
+            input_lr_u = input_lr_u.cuda()
+            target = target.cuda()
+        if (opt.net == "resnet"):
+            output = model(input_pan, input_lr)
+        else:
+            output = model(input_pan, input_lr_u)
+        loss = criterion(output, target)
+        avg_l1 += loss
+    test_log.write("{} {:.10f}\n".format(epoch, avg_l1 / len(test_data_loader)))
+    print("===>Epoch{} Avg. L1: {:.4f} dB".format(epoch, avg_l1 / len(test_data_loader)))
+
+def save_checkpoint(model, epoch, t):
+    model_out_path = "model/model/{}_{}/model_epoch_{}.pth".format(opt.net,t,epoch)
     state = {"epoch": epoch, "model": model}
 
     if not os.path.exists("model/model/{}".format(opt.net)):
