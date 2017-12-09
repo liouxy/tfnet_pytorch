@@ -91,7 +91,7 @@ def main():
     test_log = open(os.path.join(opt.log, "%s_%s_test.log")%(opt.net, t), "w")
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):
         train(training_data_loader, optimizer, model, criterion, epoch, train_log)
-        if epoch%1==0:
+        if epoch%10==0:
             test(test_data_loader, model, criterion, epoch, test_log)
             save_checkpoint(model, epoch, t)
     train_log.close()
