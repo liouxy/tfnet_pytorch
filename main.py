@@ -131,6 +131,7 @@ def train(training_data_loader, optimizer, model, criterion, epoch, train_log):
         if iteration%10 == 0:
             print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader),
                                                                 loss.data[0]))
+            train_log.flush()
 
 
 def test(test_data_loader, model, criterion, epoch, test_log):
