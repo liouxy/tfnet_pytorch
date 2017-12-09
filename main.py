@@ -14,7 +14,7 @@ import time
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Super Res Example')
-parser.add_argument('--batchSize', type=int, default=100, help='training batch size')
+parser.add_argument('--batchSize', type=int, default=64, help='training batch size')
 parser.add_argument('--testBatchSize', type=int, default=96, help='testing batch size')
 parser.add_argument('--nEpochs', type=int, default=600, help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning Rate. Default=0.01')
@@ -115,11 +115,11 @@ def train(training_data_loader, optimizer, model, criterion, epoch, train_log):
         input_pan, input_lr, input_lr_u, target = Variable(batch[0]), Variable(batch[1]), Variable(batch[2]),Variable(batch[3], requires_grad=False)
         if opt.cuda:
             input_pan = input_pan.cuda()
-            input_lr = input_lr.cuda()
+ #           input_lr = input_lr.cuda()
             input_lr_u = input_lr_u.cuda()
             target = target.cuda()
         if(opt.net=="resnet"):
-            output = model(input_pan, input_lr)
+            output = model(input_pan, input_lr_u)
         else:
             output = model(input_pan, input_lr_u)
         loss = criterion(output, target)
@@ -139,11 +139,11 @@ def test(test_data_loader, model, criterion, epoch, test_log):
         input_pan, input_lr, input_lr_u, target = Variable(batch[0],volatile=True), Variable(batch[1],volatile=True), Variable(batch[2],volatile=True),Variable(batch[3], requires_grad=False,volatile=True)
         if opt.cuda:
             input_pan = input_pan.cuda()
-            input_lr = input_lr.cuda()
+#            input_lr = input_lr.cuda()
             input_lr_u = input_lr_u.cuda()
             target = target.cuda()
         if (opt.net == "resnet"):
-            output = model(input_pan, input_lr)
+            output = model(input_pan, input_lr_u)
         else:
             output = model(input_pan, input_lr_u)
         loss = criterion(output, target)

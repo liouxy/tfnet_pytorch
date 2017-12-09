@@ -15,7 +15,6 @@ class DatasetFromFolder(data.Dataset):
     def __init__(self, image_dir, input_transform=None, target_transform=None):
         super(DatasetFromFolder, self).__init__()
         self.image_filenames = [join(image_dir, x.split('_')[0]) for x in listdir(image_dir) if is_image_file(x)]
-
         self.input_transform = input_transform
         self.target_transform = target_transform
 
@@ -24,6 +23,7 @@ class DatasetFromFolder(data.Dataset):
         input_lr = load_image('%s_lr.tif'%self.image_filenames[index])
         input_lr_u = load_image('%s_lr_u.tif'%self.image_filenames[index])
         target = load_image('%s_mul.tif'%self.image_filenames[index])
+        filename = int(self.image_filenames[index].split('/')[-1])
         if self.input_transform:
             input_pan = self.input_transform(input_pan)
             input_lr = self.input_transform(input_lr)
@@ -31,7 +31,7 @@ class DatasetFromFolder(data.Dataset):
         if self.target_transform:
             target = self.target_transform(target)
 
-        return input_pan, input_lr, input_lr_u, target
+        return input_pan, input_lr, input_lr_u, target, filename
 
     def __len__(self):
         return len(self.image_filenames)
