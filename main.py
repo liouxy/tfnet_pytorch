@@ -6,7 +6,7 @@ import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from model import Net, TFNet
+from model import ResNet, TFNet
 from data import get_training_set, get_test_set
 import random
 import os
@@ -14,8 +14,8 @@ import time
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Super Res Example')
-parser.add_argument('--batchSize', type=int, default=125, help='training batch size')
-parser.add_argument('--testBatchSize', type=int, default=10, help='testing batch size')
+parser.add_argument('--batchSize', type=int, default=100, help='training batch size')
+parser.add_argument('--testBatchSize', type=int, default=96, help='testing batch size')
 parser.add_argument('--nEpochs', type=int, default=600, help='number of epochs to train for')
 parser.add_argument('--lr', type=float, default=0.0001, help='Learning Rate. Default=0.01')
 parser.add_argument('--cuda', action='store_true', help='use cuda?')
@@ -48,11 +48,11 @@ def main():
     train_set = get_training_set(opt.dataset)
     test_set = get_test_set(opt.dataset)
     training_data_loader = DataLoader(dataset=train_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=True)
-    test_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.batchSize, shuffle=False)
+    test_data_loader = DataLoader(dataset=test_set, num_workers=opt.threads, batch_size=opt.testBatchSize, shuffle=False)
 
     print("===> Building model")
     if (opt.net=='resnet'):
-        model = Net()
+        model = ResNet()
     else:
         model = TFNet()
     criterion = nn.L1Loss()
@@ -127,17 +127,16 @@ def train(training_data_loader, optimizer, model, criterion, epoch, train_log):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        train_log.write("{} {:.10f}\n".format(epoch*len(training_data_loader)+iteration, loss.data[0]))
+        train_log.write("{} {:.10f}\n".format((epoch-1)*len(training_data_loader)+iteration, loss.data[0]))
         if iteration%10 == 0:
             print("===> Epoch[{}]({}/{}): Loss: {:.10f}".format(epoch, iteration, len(training_data_loader),
                                                                 loss.data[0]))
-            train_log.flush()
-
 
 def test(test_data_loader, model, criterion, epoch, test_log):
     avg_l1 = 0
-    for batch in test_data_loader:
-        input_pan, input_lr, input_lr_u, target = Variable(batch[0]), Variable(batch[1]), Variable(batch[2]),Variable(batch[3], requires_grad=False)
+    model.eval()
+    for index,batch in enumerate(test_data_loader):
+        input_pan, input_lr, input_lr_u, target = Variable(batch[0],volatile=True), Variable(batch[1],volatile=True), Variable(batch[2],volatile=True),Variable(batch[3], requires_grad=False,volatile=True)
         if opt.cuda:
             input_pan = input_pan.cuda()
             input_lr = input_lr.cuda()
@@ -148,9 +147,10 @@ def test(test_data_loader, model, criterion, epoch, test_log):
         else:
             output = model(input_pan, input_lr_u)
         loss = criterion(output, target)
-        avg_l1 += loss
-    test_log.write("{} {:.10f}\n".format(epoch, avg_l1 / len(test_data_loader)))
-    print("===>Epoch{} Avg. L1: {:.4f} dB".format(epoch, avg_l1 / len(test_data_loader)))
+        avg_l1 += loss.data[0]
+    del (input_pan, input_lr, input_lr_u, target, output)
+    test_log.write("{} {:.10f}\n".format((epoch-1), avg_l1 / len(test_data_loader)))
+    print("===>Epoch{} Avg. L1: {:.4f} ".format(epoch, avg_l1 / len(test_data_loader)))
 
 def save_checkpoint(model, epoch, t):
     model_out_path = "model/{}_{}/model_epoch_{}.pth".format(opt.net,t,epoch)
