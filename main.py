@@ -91,7 +91,7 @@ def main():
     test_log = open(os.path.join(opt.log, "%s_%s_test.log")%(opt.net, t), "w")
     for epoch in range(opt.start_epoch, opt.nEpochs + 1):
         train(training_data_loader, optimizer, model, criterion, epoch, train_log)
-        if epoch%10==0:
+        if epoch%1==0:
             test(test_data_loader, model, criterion, epoch, test_log)
             save_checkpoint(model, epoch, t)
     train_log.close()
@@ -152,11 +152,11 @@ def test(test_data_loader, model, criterion, epoch, test_log):
     print("===>Epoch{} Avg. L1: {:.4f} dB".format(epoch, avg_l1 / len(test_data_loader)))
 
 def save_checkpoint(model, epoch, t):
-    model_out_path = "model/model/{}_{}/model_epoch_{}.pth".format(opt.net,t,epoch)
+    model_out_path = "model/{}_{}/model_epoch_{}.pth".format(opt.net,t,epoch)
     state = {"epoch": epoch, "model": model}
 
-    if not os.path.exists("model/model/{}".format(opt.net)):
-        os.makedirs("model/model/{}".format(opt.net))
+    if not os.path.exists("model/{}_{}".format(opt.net, t)):
+        os.makedirs("model/{}_{}".format(opt.net, t))
 
     torch.save(state, model_out_path)
 
