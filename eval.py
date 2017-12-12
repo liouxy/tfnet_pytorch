@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.linalg import norm
+
 import argparse
 import torch
 from data import get_test_set
@@ -30,12 +30,8 @@ def test(test_data_loader, model):
         input_pan, input_lr, input_lr_u, filename = Variable(batch[0],volatile=True), Variable(batch[1],volatile=True), Variable(batch[2],volatile=True),Variable(batch[4], requires_grad=False,volatile=True)
         if opt.cuda:
             input_pan = input_pan.cuda()
-            input_lr = input_lr.cuda()
             input_lr_u = input_lr_u.cuda()
-        if (opt.net == "resnet"):
-            output = model(input_pan, input_lr)
-        else:
-            output = model(input_pan, input_lr_u)
+        output = model(input_pan, input_lr_u)
         output = output.cpu()
         for i in range(output.data.shape[0]):
             image = (output.data[i]+1)/2.0
@@ -43,7 +39,7 @@ def test(test_data_loader, model):
             image = np.transpose(image.numpy(), (1, 2, 0))
             print (image.shape)
             image = Image.fromarray(image)
-            image.save(os.path.join(image_path,'%d_out.tif'%(filename.data[i])))
+            image.save(os.path.join(image_path,'%d_out_tf.tif'%(filename.data[i])))
 
 
 if not os.path.exists(image_path):
@@ -62,18 +58,3 @@ test(test_data_loader, model['model'])
 
 
 
-
-def sam1(x_true, x_pred):
-
-    assert x_true.ndim ==3 and x_true.shape == x_pred.shape
-    dot_sum = np.sum(x_true*x_pred,axis=2)
-    norm_true = norm(x_true, axis=2)
-    norm_pred = norm(x_pred, axis=2)
-
-    res = np.arccos(dot_sum/norm_pred/norm_true)
-    is_nan = np.nonzero(np.isnan(res))
-    for (x,y) in zip(is_nan[0], is_nan[1]):
-        res[x,y]=0
-
-    sam = np.mean(res)
-    return sam
